@@ -16,14 +16,11 @@ export interface ProfileRecentMatch {
   data_source: string;
   outcome: string;
   rank: number | null;
-  rank_type: string | null;
   map_name: string;
 }
 
 export interface ProfileResponse {
-  privacy_mode: string;
   name: string;
-  steam64_id: string;
   ranks: ProfileRanks;
   rating: ProfileRating;
   recent_matches: ProfileRecentMatch[];
@@ -31,12 +28,8 @@ export interface ProfileResponse {
 
 export interface MatchPlayerStats {
   steam64_id: string;
-  name: string;
   total_kills: number;
-  total_deaths: number;
-  kd_ratio: number;
   dpr: number;
-  initial_team_number: number;
 }
 
 export interface MatchDetails {

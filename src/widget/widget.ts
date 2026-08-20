@@ -2,8 +2,8 @@ import { consumeApiKey } from "../shared/api-key";
 import { fetchLeetifyData } from "../shared/api";
 import {
   getEffectiveRefreshMinutes,
-  isValidSteam64Id,
   paramsToConfig,
+  widgetConfigError,
 } from "../shared/config";
 import { buildWidgetData } from "../shared/stats";
 import { renderWidget, renderWidgetState } from "../shared/widget-view";
@@ -17,11 +17,10 @@ if (!container) {
 
 const config = paramsToConfig(new URLSearchParams(window.location.search));
 const apiKey = consumeApiKey();
+const configError = widgetConfigError(config);
 
-if (!isValidSteam64Id(config.steamId)) {
-  renderWidgetState(container, "error", "Enter a valid 17-digit Steam64 ID.");
-} else if (!config.showPremier && !config.showFaceit) {
-  renderWidgetState(container, "error", "Enable Premier, Faceit, or both.");
+if (configError) {
+  renderWidgetState(container, "error", configError);
 } else {
   let requestInProgress = false;
 

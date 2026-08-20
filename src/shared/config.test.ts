@@ -4,6 +4,7 @@ import {
   getEffectiveRefreshMinutes,
   isValidSteam64Id,
   paramsToConfig,
+  widgetConfigError,
 } from "./config";
 import { DEFAULT_CONFIG } from "./types";
 
@@ -39,5 +40,19 @@ describe("widget config", () => {
   it("enforces a five-minute keyless minimum", () => {
     expect(getEffectiveRefreshMinutes(1, false)).toBe(5);
     expect(getEffectiveRefreshMinutes(1, true)).toBe(1);
+  });
+
+  it("returns shared validation messages", () => {
+    expect(widgetConfigError(DEFAULT_CONFIG)).toBe(
+      "Enter a valid 17-digit Steam64 ID.",
+    );
+    expect(
+      widgetConfigError({
+        ...DEFAULT_CONFIG,
+        steamId: "76561198093148511",
+        showPremier: false,
+        showFaceit: false,
+      }),
+    ).toBe("Enable Premier, Faceit, or both.");
   });
 });

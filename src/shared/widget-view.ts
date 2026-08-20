@@ -27,6 +27,13 @@ const FACEIT_RANK_IMAGES: Record<number, string> = {
   10: faceit10,
 };
 
+const COMPACT_FADE_CLASSES = [
+  "compact-result--oldest",
+  "compact-result--second-oldest",
+  "compact-result--third-oldest",
+  "compact-result--fourth-oldest",
+] as const;
+
 function element<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   className?: string,
@@ -56,6 +63,13 @@ function image(className: string, source: string, alt: string) {
 
 function isRanked(value: number | null): value is number {
   return value !== null && value > 0;
+}
+
+function outcomeGlyph(outcome: HistoryItem["outcome"]): string {
+  if (outcome === "win") return "W";
+  if (outcome === "loss") return "L";
+  if (outcome === "tie") return "D";
+  return "?";
 }
 
 function premierTier(rating: number | null): string {
@@ -176,10 +190,7 @@ function appendHistory(
   playerName: string,
   detailed: boolean,
 ) {
-  const section = element(
-    "section",
-    `history history--${detailed ? "detailed" : "compact"}`,
-  );
+  const section = element("section", `history${detailed ? "" : " history--compact"}`);
   const heading = element("div", "history__label");
   heading.append(element("span", "history__player", playerName));
   heading.append(element("span", "history__separator", " - "));
@@ -191,18 +202,10 @@ function appendHistory(
     list.append(element("span", "history__empty", "No eligible recent matches"));
   } else if (!detailed) {
     for (const item of [...history].reverse()) {
-      const outcome =
-        item.outcome === "win"
-          ? "W"
-          : item.outcome === "loss"
-            ? "L"
-            : item.outcome === "tie"
-              ? "D"
-              : "?";
       const result = element(
         "span",
         `compact-result compact-result--${item.outcome}`,
-        outcome,
+        outcomeGlyph(item.outcome),
       );
       result.title = `${item.mapName.replace(/^de_/, "")} · ${item.platform}`;
       list.append(result);
@@ -220,21 +223,13 @@ function appendHistory(
           : "";
       const card = element(
         "div",
-        `match match--${item.outcome} match--${item.platform}${ageClass}`,
+        `match match--${item.outcome}${ageClass}`,
       );
       const rankDescription = isRanked(item.endingRank)
         ? formatNumber(item.endingRank)
         : "None";
       card.title = `${item.mapName.replace(/^de_/, "")} · ${item.platform} · ending rank ${rankDescription}`;
-      const outcome =
-        item.outcome === "win"
-          ? "W"
-          : item.outcome === "loss"
-            ? "L"
-            : item.outcome === "tie"
-              ? "D"
-              : "?";
-      card.append(element("strong", "match__outcome", outcome));
+      card.append(element("strong", "match__outcome", outcomeGlyph(item.outcome)));
       const rank = element("div", "match__rank");
       appendHistoryRank(rank, item);
       card.append(rank);
@@ -264,24 +259,26 @@ function fitCompactHistory(top: HTMLElement, section: HTMLElement) {
 
   const results = [...list.children];
   for (const result of results) {
-    result.classList.remove(
-      "compact-result--oldest",
-      "compact-result--second-oldest",
-      "compact-result--third-oldest",
-      "compact-result--fourth-oldest",
-    );
+    result.classList.remove(...COMPACT_FADE_CLASSES);
   }
-  const fadeClasses = [
-    "compact-result--oldest",
-    "compact-result--second-oldest",
-    "compact-result--third-oldest",
-    "compact-result--fourth-oldest",
-  ];
-  const fadedResultCount = Math.min(fadeClasses.length, results.length - 1);
+  const fadedResultCount = Math.min(COMPACT_FADE_CLASSES.length, results.length - 1);
   for (let index = 0; index < fadedResultCount; index += 1) {
-    const fadeClass = fadeClasses[index];
+    const fadeClass = COMPACT_FADE_CLASSES[index];
     if (fadeClass) results[index]?.classList.add(fadeClass);
   }
+}
+
+function widgetFrame(widget: HTMLElement, includeCredit = false): HTMLElement {
+  const frame = element("div", "widget-frame");
+  frame.append(widget);
+  if (includeCredit) {
+    const credit = element("div", "widget-credit");
+    credit.append(
+      image("widget-credit__badge", leetifyBadge, "Data provided by Leetify"),
+    );
+    frame.append(credit);
+  }
+  return frame;
 }
 
 export function renderWidget(
@@ -311,8 +308,10 @@ export function renderWidget(
     [config.showAim, formatNumber(data.aim, 1), "Aim"],
   ];
 
+  let visibleStatCount = 0;
   for (const [visible, value, label] of statValues) {
     if (!visible) continue;
+    if (visibleStatCount > 0) stats.append(element("span", "stat-divider"));
     const stat = element("div", "stat");
     stat.append(element("strong", "stat__value", value));
     stat.append(element("span", "stat__label", label));
@@ -320,6 +319,7 @@ export function renderWidget(
       stat.title = `Calculated from ${data.aggregates.matchCount} eligible matches`;
     }
     stats.append(stat);
+    visibleStatCount += 1;
   }
   if (stats.childElementCount > 0) top.append(stats);
   widget.append(top);
@@ -331,14 +331,7 @@ export function renderWidget(
     !config.showCompactHistory,
   );
 
-  const frame = element("div", "widget-frame");
-  frame.append(widget);
-  const credit = element("div", "widget-credit");
-  credit.append(
-    image("widget-credit__badge", leetifyBadge, "Data provided by Leetify"),
-  );
-  frame.append(credit);
-  container.replaceChildren(frame);
+  container.replaceChildren(widgetFrame(widget, true));
   if (config.showCompactHistory) fitCompactHistory(top, history);
 }
 
@@ -350,5 +343,5 @@ export function renderWidgetState(
   const widget = element("article", `widget-shell widget-shell--${state}`);
   widget.append(element("strong", "state__title", state === "loading" ? "Loading" : "Error"));
   widget.append(element("span", "state__message", message));
-  container.replaceChildren(widget);
+  container.replaceChildren(widgetFrame(widget));
 }

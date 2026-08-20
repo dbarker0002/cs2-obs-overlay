@@ -4,9 +4,15 @@ import leetifyBadge from "../../assets/Leetify_Badge_White_Large.png";
 import {
   configToParams,
   isValidSteam64Id,
+  KEYLESS_MINIMUM_REFRESH_MINUTES,
   paramsToConfig,
+  widgetConfigError,
 } from "../shared/config";
-import { buildWidgetData } from "../shared/stats";
+import {
+  buildWidgetData,
+  COMPACT_HISTORY_LIMIT,
+  isPlatformEnabled,
+} from "../shared/stats";
 import {
   DEFAULT_CONFIG,
   type HistoryItem,
@@ -85,32 +91,35 @@ const SAMPLE_OUTCOMES = [
   "win",
 ] as const;
 
-const SAMPLE_HISTORY: HistoryItem[] = Array.from({ length: 50 }, (_, index) => {
-  const platform = index % 2 === 0 ? "premier" : "faceit";
-  const outcome = SAMPLE_OUTCOMES[index % SAMPLE_OUTCOMES.length]!;
-  const ratingChangeMagnitude = 110 + ((index * 37) % 441);
-  return {
-    id: `sample-${index}`,
-    platform,
-    finishedAt: new Date(Date.UTC(2026, 7, 19 - index)).toISOString(),
-    mapName: "de_mirage",
-    outcome,
-    endingRank: platform === "faceit" ? 10 : 18_000 + index * 47,
-    premierChange:
-      platform !== "premier"
-        ? null
-        : outcome === "win"
-          ? ratingChangeMagnitude
-          : outcome === "loss"
-            ? -ratingChangeMagnitude
-            : (Math.floor(index / 20) % 2 === 0 ? 1 : -1) *
-              (51 + (index % 6)),
-  };
-});
+const SAMPLE_HISTORY: HistoryItem[] = Array.from(
+  { length: COMPACT_HISTORY_LIMIT },
+  (_, index) => {
+    const platform = index % 2 === 0 ? "premier" : "faceit";
+    const outcome = SAMPLE_OUTCOMES[index % SAMPLE_OUTCOMES.length]!;
+    const ratingChangeMagnitude = 110 + ((index * 37) % 441);
+    return {
+      id: `sample-${index}`,
+      platform,
+      finishedAt: new Date(Date.UTC(2026, 7, 19 - index)).toISOString(),
+      mapName: "de_mirage",
+      outcome,
+      endingRank: platform === "faceit" ? 10 : 18_000 + index * 47,
+      premierChange:
+        platform !== "premier"
+          ? null
+          : outcome === "win"
+            ? ratingChangeMagnitude
+            : outcome === "loss"
+              ? -ratingChangeMagnitude
+              : (Math.floor(index / 20) % 2 === 0 ? 1 : -1) *
+                (51 + (index % 6)),
+    };
+  },
+);
 
 function sampleWidgetData(config: WidgetConfig): WidgetData {
   const history = SAMPLE_HISTORY.filter((item) =>
-    item.platform === "premier" ? config.showPremier : config.showFaceit,
+    isPlatformEnabled(item.platform, config),
   );
   return {
     ...EMPTY_WIDGET_DATA,
@@ -172,12 +181,18 @@ function widgetBaseUrl(): URL {
 function updateKeyControls() {
   const hasKey = apiKeyInput.value.trim().length > 0;
   for (const option of refreshInput.options) {
-    option.disabled = !hasKey && Number(option.value) < 5;
+    option.disabled =
+      !hasKey && Number(option.value) < KEYLESS_MINIMUM_REFRESH_MINUTES;
   }
-  if (!hasKey && Number(refreshInput.value) < 5) refreshInput.value = "5";
+  if (
+    !hasKey &&
+    Number(refreshInput.value) < KEYLESS_MINIMUM_REFRESH_MINUTES
+  ) {
+    refreshInput.value = String(KEYLESS_MINIMUM_REFRESH_MINUTES);
+  }
   refreshHint.textContent = hasKey
     ? "Your key enables the faster refresh choices."
-    : "5 minute minimum without API key.";
+    : `${KEYLESS_MINIMUM_REFRESH_MINUTES} minute minimum without API key.`;
 }
 
 function updateUrl() {
@@ -225,29 +240,40 @@ function updatePlatformRequirements(changed?: HTMLInputElement) {
   if (faceitLabel) faceitLabel.title = faceitTitle;
 }
 
+function clearPreviewDebounce() {
+  if (previewDebounceTimer === undefined) return;
+  window.clearTimeout(previewDebounceTimer);
+  previewDebounceTimer = undefined;
+}
+
 function schedulePreviewLoad() {
-  if (previewDebounceTimer !== undefined) {
-    window.clearTimeout(previewDebounceTimer);
-  }
+  clearPreviewDebounce();
   if (!isValidSteam64Id(steamIdInput.value.trim())) return;
   previewDebounceTimer = window.setTimeout(() => {
+    previewDebounceTimer = undefined;
     void loadPreview(false);
   }, 500);
 }
 
+function isCurrentPreviewRequest(requestId: number, steamId: string): boolean {
+  return (
+    requestId === previewRequestId && steamIdInput.value.trim() === steamId
+  );
+}
+
 async function loadPreview(reportErrors: boolean) {
   const config = readConfig();
-  if (!isValidSteam64Id(config.steamId)) {
-    steamIdInput.setCustomValidity("Enter a valid 17-digit Steam64 ID.");
-    if (reportErrors) steamIdInput.reportValidity();
+  const configError = widgetConfigError(config);
+  if (configError) {
+    if (!isValidSteam64Id(config.steamId)) {
+      steamIdInput.setCustomValidity(configError);
+      if (reportErrors) steamIdInput.reportValidity();
+    } else {
+      renderWidgetState(preview, "error", configError);
+    }
     return;
   }
   steamIdInput.setCustomValidity("");
-
-  if (!config.showPremier && !config.showFaceit) {
-    renderWidgetState(preview, "error", "Enable Premier, Faceit, or both.");
-    return;
-  }
 
   const requestId = ++previewRequestId;
   preview.setAttribute("aria-busy", "true");
@@ -256,16 +282,12 @@ async function loadPreview(reportErrors: boolean) {
       config.steamId,
       apiKeyInput.value.trim() || undefined,
     );
-    if (requestId !== previewRequestId || steamIdInput.value.trim() !== config.steamId) {
-      return;
-    }
+    if (!isCurrentPreviewRequest(requestId, config.steamId)) return;
     previewSource = { profile, matches };
     previewSteamId = config.steamId;
     renderCurrentPreview();
   } catch (error) {
-    if (requestId !== previewRequestId || steamIdInput.value.trim() !== config.steamId) {
-      return;
-    }
+    if (!isCurrentPreviewRequest(requestId, config.steamId)) return;
     const message = error instanceof Error ? error.message : "Could not load stats.";
     renderWidgetState(preview, "error", message);
     updateCanvasRecommendation();
@@ -277,43 +299,41 @@ async function loadPreview(reportErrors: boolean) {
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   const config = readConfig();
-  if (!isValidSteam64Id(config.steamId)) {
-    steamIdInput.setCustomValidity("Enter a valid 17-digit Steam64 ID.");
-    steamIdInput.reportValidity();
+  const configError = widgetConfigError(config);
+  if (configError) {
+    if (!isValidSteam64Id(config.steamId)) {
+      steamIdInput.setCustomValidity(configError);
+      steamIdInput.reportValidity();
+    } else {
+      renderWidgetState(preview, "error", configError);
+    }
     return;
   }
   hasGeneratedUrl = true;
   updateUrl();
   if (!previewSource || previewSteamId !== config.steamId) {
-    if (previewDebounceTimer !== undefined) {
-      window.clearTimeout(previewDebounceTimer);
-      previewDebounceTimer = undefined;
-    }
+    clearPreviewDebounce();
     void loadPreview(true);
   }
 });
 
 form.addEventListener("input", (event) => {
   const target = event.target;
-  if (event.target === steamIdInput && steamIdInput.validity.customError) {
-    steamIdInput.setCustomValidity("");
-  }
-  if (target === premierInput || target === faceitInput) {
-    updatePlatformRequirements(
-      target === premierInput ? premierInput : faceitInput,
-    );
-  }
   if (target === steamIdInput) {
+    if (steamIdInput.validity.customError) steamIdInput.setCustomValidity("");
     if (hasGeneratedUrl) hasGeneratedUrl = false;
     if (previewSteamId !== steamIdInput.value.trim()) previewSource = null;
     schedulePreviewLoad();
+    updateUrl();
+    renderCurrentPreview();
+  } else if (target === apiKeyInput) {
+    updateUrl();
   }
-  updateUrl();
-  renderCurrentPreview();
 });
 
 form.addEventListener("change", (event) => {
   const target = event.target;
+  if (target === steamIdInput || target === apiKeyInput) return;
   if (target === premierInput || target === faceitInput) {
     updatePlatformRequirements(
       target === premierInput ? premierInput : faceitInput,
@@ -330,9 +350,7 @@ byId<HTMLButtonElement>("reset").addEventListener("click", () => {
   previewSteamId = "";
   hasGeneratedUrl = false;
   previewRequestId += 1;
-  if (previewDebounceTimer !== undefined) {
-    window.clearTimeout(previewDebounceTimer);
-  }
+  clearPreviewDebounce();
   updatePlatformRequirements();
   updateUrl();
   renderCurrentPreview();

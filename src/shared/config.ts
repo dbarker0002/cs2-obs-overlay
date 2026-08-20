@@ -1,6 +1,9 @@
 import { DEFAULT_CONFIG, type WidgetConfig } from "./types";
 
 const STEAM64_PATTERN = /^\d{17}$/;
+const INVALID_STEAM_ID_MESSAGE = "Enter a valid 17-digit Steam64 ID.";
+const NO_PLATFORM_MESSAGE = "Enable Premier, Faceit, or both.";
+export const KEYLESS_MINIMUM_REFRESH_MINUTES = 5;
 
 function readBoolean(params: URLSearchParams, name: string, fallback: boolean) {
   const value = params.get(name);
@@ -35,8 +38,7 @@ export function paramsToConfig(params: URLSearchParams): WidgetConfig {
     ),
     showAdr: readBoolean(params, "adr", DEFAULT_CONFIG.showAdr),
     showAim: readBoolean(params, "aim", DEFAULT_CONFIG.showAim),
-    showCompactHistory:
-      params.get("compact") === "1" || DEFAULT_CONFIG.showCompactHistory,
+    showCompactHistory: params.get("compact") === "1",
     historyCount: readInteger(
       params,
       "historyCount",
@@ -75,5 +77,13 @@ export function getEffectiveRefreshMinutes(
   requestedMinutes: number,
   hasApiKey: boolean,
 ): number {
-  return hasApiKey ? Math.max(1, requestedMinutes) : Math.max(5, requestedMinutes);
+  return hasApiKey
+    ? Math.max(1, requestedMinutes)
+    : Math.max(KEYLESS_MINIMUM_REFRESH_MINUTES, requestedMinutes);
+}
+
+export function widgetConfigError(config: WidgetConfig): string | null {
+  if (!isValidSteam64Id(config.steamId)) return INVALID_STEAM_ID_MESSAGE;
+  if (!config.showPremier && !config.showFaceit) return NO_PLATFORM_MESSAGE;
+  return null;
 }

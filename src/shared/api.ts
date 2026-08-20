@@ -30,7 +30,6 @@ function parseRecentMatch(value: unknown): ProfileRecentMatch | null {
     data_source: stringValue(value.data_source),
     outcome: stringValue(value.outcome),
     rank: numberValue(value.rank),
-    rank_type: typeof value.rank_type === "string" ? value.rank_type : null,
     map_name: stringValue(value.map_name, "unknown"),
   };
 }
@@ -47,9 +46,7 @@ function parseProfile(value: unknown): ProfileResponse {
     : [];
 
   return {
-    privacy_mode: stringValue(value.privacy_mode),
     name: stringValue(value.name, "Unknown player"),
-    steam64_id: stringValue(value.steam64_id),
     ranks: {
       premier: numberValue(ranks.premier),
       faceit: numberValue(ranks.faceit),
@@ -64,12 +61,8 @@ function parsePlayerStats(value: unknown): MatchPlayerStats | null {
   if (!isRecord(value) || typeof value.steam64_id !== "string") return null;
   return {
     steam64_id: value.steam64_id,
-    name: stringValue(value.name),
     total_kills: numberValue(value.total_kills) ?? 0,
-    total_deaths: numberValue(value.total_deaths) ?? 0,
-    kd_ratio: numberValue(value.kd_ratio) ?? 0,
     dpr: numberValue(value.dpr) ?? 0,
-    initial_team_number: numberValue(value.initial_team_number) ?? 0,
   };
 }
 

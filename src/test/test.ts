@@ -47,13 +47,23 @@ const premierExamples: BadgeExample[] = [
   },
 ];
 
-const faceitExamples: BadgeExample[] = Array.from({ length: 10 }, (_, index) => {
-  const level = index + 1;
-  return {
-    label: `Faceit · level ${level}`,
-    render: (parent) => appendFaceitRank(parent, level, 750 + level * 175),
-  };
-});
+const faceitLevels = [
+  { level: 1, elo: 300, range: "100–500" },
+  { level: 2, elo: 625, range: "501–750" },
+  { level: 3, elo: 825, range: "751–900" },
+  { level: 4, elo: 975, range: "901–1,050" },
+  { level: 5, elo: 1_125, range: "1,051–1,200" },
+  { level: 6, elo: 1_275, range: "1,201–1,350" },
+  { level: 7, elo: 1_440, range: "1,351–1,530" },
+  { level: 8, elo: 1_640, range: "1,531–1,750" },
+  { level: 9, elo: 1_875, range: "1,751–2,000" },
+  { level: 10, elo: 2_100, range: "2,001+" },
+];
+
+const faceitExamples: BadgeExample[] = faceitLevels.map(({ level, elo, range }) => ({
+  label: `Faceit · level ${level} · ${range} Elo`,
+  render: (parent) => appendFaceitRank(parent, level, elo),
+}));
 
 faceitExamples.push(
   {
@@ -73,7 +83,7 @@ for (const example of examples) {
   item.className = "badge-example";
 
   const badge = document.createElement("div");
-  badge.className = "badge-example__preview";
+  badge.className = "ranks";
   example.render(badge);
 
   const label = document.createElement("span");

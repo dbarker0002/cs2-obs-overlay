@@ -9,13 +9,15 @@ import type {
   ProfileResponse,
 } from "./types";
 
+export const COMPACT_HISTORY_LIMIT = 30;
+
 export function sourceToPlatform(source: string): SupportedPlatform | null {
   if (source === "matchmaking") return "premier";
   if (source === "faceit") return "faceit";
   return null;
 }
 
-function isPlatformEnabled(platform: SupportedPlatform, config: WidgetConfig) {
+export function isPlatformEnabled(platform: SupportedPlatform, config: WidgetConfig) {
   return platform === "premier" ? config.showPremier : config.showFaceit;
 }
 
@@ -97,7 +99,7 @@ export function buildHistory(
     previousPremierRank = item.endingRank;
   }
 
-  const limit = config.showCompactHistory ? 30 : config.historyCount;
+  const limit = config.showCompactHistory ? COMPACT_HISTORY_LIMIT : config.historyCount;
   return history.reverse().slice(0, limit);
 }
 

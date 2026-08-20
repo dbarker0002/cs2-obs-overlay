@@ -14,11 +14,8 @@ export function apiKeyToFragment(apiKey: string): string {
 
 export function consumeApiKey(): string | undefined {
   const fragmentKey = apiKeyFromFragment(window.location.hash);
-  const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ""));
 
-  if (fragment.get("clearKey") === "1") {
-    window.localStorage.removeItem(STORAGE_KEY);
-  } else if (fragmentKey) {
+  if (fragmentKey) {
     window.localStorage.setItem(STORAGE_KEY, fragmentKey);
   }
 

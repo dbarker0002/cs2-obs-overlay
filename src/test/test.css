@@ -46,10 +46,6 @@ body {
   border-radius: 12px;
 }
 
-.badge-example__preview {
-  height: 48px;
-}
-
 .badge-example__label {
   font-size: 0.75rem;
   color: #aeb8ca;

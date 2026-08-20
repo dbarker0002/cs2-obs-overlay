@@ -18,12 +18,8 @@ function match(
     stats: [
       {
         steam64_id: steamId,
-        name: "mixedup",
         total_kills: kills,
-        total_deaths: 10,
-        kd_ratio: kills / 10,
         dpr,
-        initial_team_number: 2,
       },
     ],
   };
@@ -41,7 +37,6 @@ function recent(
     map_name: "de_mirage",
     outcome: id === "1" ? "loss" : "win",
     rank,
-    rank_type: null,
   };
 }
 
