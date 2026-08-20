@@ -17,8 +17,8 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    radial-gradient(circle at 15% 0%, rgb(49 46 129 / 26%), transparent 34rem),
-    radial-gradient(circle at 90% 20%, rgb(194 65 12 / 14%), transparent 30rem),
+    radial-gradient(circle at 11% 3%, rgb(49 46 129 / 26%), transparent 34rem),
+    radial-gradient(circle at 94% 36%, rgb(249 115 22 / 18%), transparent 30rem),
     #080b12;
 }
 
