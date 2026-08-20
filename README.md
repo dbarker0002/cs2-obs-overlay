@@ -71,12 +71,14 @@ Leetify if it is exposed.
 - Your SteamID64 appears in the widget URL and is sent to Leetify to retrieve
   your public profile.
 
-## Rank artwork
+## Rank images/artworks
 
-Faceit level icons and Premier rating frames are sourced from
+Faceit level icons and Premier rating frames were sourced from
 [itzarty/csgo-rank-icons](https://github.com/itzarty/csgo-rank-icons) and served
-locally from `assets/`. The “Data provided by Leetify” badge is also served
-locally.
+locally from `assets/`. The assets in that repo were in turn sourced from extracting
+from Faceit's assets and from extracting CS game data. The “Data provided by Leetify”
+badge is also served locally and was obtained from their developer guidelines page.
+All assets are property of their respective owners.
 
 ## License
 
