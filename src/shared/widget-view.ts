@@ -97,7 +97,7 @@ export function appendPremierRank(parent: HTMLElement, rating: number | null) {
   parent.append(rank);
 }
 
-function appendFaceitRank(
+export function appendFaceitRank(
   parent: HTMLElement,
   level: number | null,
   elo: number | null,
@@ -106,10 +106,7 @@ function appendFaceitRank(
   const levelImage = FACEIT_RANK_IMAGES[normalizedLevel];
   const rankImage = levelImage ?? faceitPlaceholder;
   const hasElo = elo !== null && elo > 0;
-  const rank = element(
-    "div",
-    `rank-card rank-card--faceit${!levelImage && !hasElo ? " rank-card--faceit-empty" : ""}`,
-  );
+  const rank = element("div", "rank-card rank-card--faceit");
 
   rank.append(
     image(
@@ -120,7 +117,8 @@ function appendFaceitRank(
   );
 
   const text = element("div", "faceit-rank__text");
-  text.append(
+  const lines = element("div", "faceit-rank__lines");
+  lines.append(
     element(
       "strong",
       "rank-card__value",
@@ -128,8 +126,9 @@ function appendFaceitRank(
     ),
   );
   if (hasElo) {
-    text.append(element("span", "rank-card__detail", `${formatNumber(elo)} Elo`));
+    lines.append(element("span", "rank-card__detail", `${formatNumber(elo)} Elo`));
   }
+  text.append(lines);
   rank.append(text);
   parent.append(rank);
 }
