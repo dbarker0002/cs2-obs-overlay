@@ -14,8 +14,8 @@
       <header class="page-header">
         <div>
           <p class="eyebrow">OBS browser source</p>
-          <h1>CS2 Stats Stream Overlay</h1>
-          <p>Build a stream overlay to display your Premier and Faceit stats. Powered by Leetify.</p>
+          <h1>CS2 Stream Overlay Builder</h1>
+          <p>Build a stream overlay to display your Premier / Faceit stats and recent matches. Data Provided by Leetify.</p>
         </div>
         <img
           id="customizer-leetify-badge"
@@ -46,11 +46,14 @@
               required
             />
             <small>
-              Enter your Steam account ID. This can be found at
+              Enter your Steam64 ID (17 digits). This can be found easily via
               <a href="https://store.steampowered.com/account/" target="_blank" rel="noreferrer">
-                store.steampowered.com/account
+                store.steampowered.com/account,
               </a>
-              listed under "{Your Username}'s Account" at the top.
+              listed under "{Your Username}'s Account" at the top. Alternatively, you can find it at
+              <a href="https://steamid.io" target="_blank" rel="noreferrer">
+                steamid.io
+              </a> by searching your profile.
             </small>
           </label>
 
@@ -80,9 +83,9 @@
 
           <fieldset>
             <legend>Statistics</legend>
-            <label class="check"><input id="show-kills" type="checkbox" checked /> Average kills</label>
-            <label class="check"><input id="show-adr" type="checkbox" checked /> ADR</label>
-            <label class="check"><input id="show-aim" type="checkbox" checked /> Leetify aim</label>
+            <label class="check"><input id="show-kills" type="checkbox" checked /> Average kills per game</label>
+            <label class="check"><input id="show-adr" type="checkbox" checked /> Average damage per round</label>
+            <label class="check"><input id="show-aim" type="checkbox" checked /> Leetify aim score</label>
             <label class="check"
               ><input id="compact-history" type="checkbox" /> Compact match
               history</label
