@@ -220,9 +220,9 @@ body {
 }
 
 .stat-divider {
-  align-self: stretch;
+  align-self: center;
   width: 1px;
-  margin: 2px 0 5px;
+  height: 36px;
   background: rgb(255 255 255 / 13%);
 }
 

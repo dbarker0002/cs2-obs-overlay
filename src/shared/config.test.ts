@@ -22,19 +22,19 @@ describe("widget config", () => {
       showFaceit: false,
       showAdr: false,
       showCompactHistory: true,
-      historyCount: 5,
+      historyCount: 7,
       refreshMinutes: 10,
     };
 
     expect(paramsToConfig(configToParams(config))).toEqual(config);
   });
 
-  it("clamps numeric URL settings", () => {
+  it("falls back when numeric URL settings are not offered by the customizer", () => {
     const parsed = paramsToConfig(
       new URLSearchParams("historyCount=100&refresh=-1"),
     );
     expect(parsed.historyCount).toBe(8);
-    expect(parsed.refreshMinutes).toBe(1);
+    expect(parsed.refreshMinutes).toBe(5);
   });
 
   it("enforces a five-minute keyless minimum", () => {

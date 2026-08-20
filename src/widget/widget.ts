@@ -23,6 +23,7 @@ if (configError) {
   renderWidgetState(container, "error", configError);
 } else {
   let requestInProgress = false;
+  let hasSuccessfulRender = false;
 
   const update = async () => {
     if (requestInProgress) return;
@@ -31,9 +32,14 @@ if (configError) {
     try {
       const { profile, matches } = await fetchLeetifyData(config.steamId, apiKey);
       renderWidget(container, config, buildWidgetData(profile, matches, config));
+      hasSuccessfulRender = true;
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not load stats.";
-      renderWidgetState(container, "error", message);
+      if (!hasSuccessfulRender) {
+        const message = error instanceof Error ? error.message : "Could not load stats.";
+        renderWidgetState(container, "error", message);
+      } else {
+        console.warn("Could not refresh Leetify stats; keeping last successful data.", error);
+      }
     } finally {
       requestInProgress = false;
     }

@@ -44,6 +44,7 @@ const historyCountInput = byId<HTMLSelectElement>("history-count");
 const refreshInput = byId<HTMLSelectElement>("refresh");
 const refreshHint = byId<HTMLElement>("refresh-hint");
 const preview = byId<HTMLElement>("preview");
+const generateButton = byId<HTMLButtonElement>("generate-widget");
 const widgetUrlInput = byId<HTMLInputElement>("widget-url");
 const copyButton = byId<HTMLButtonElement>("copy-url");
 const recommendedCanvas = byId<HTMLElement>("recommended-canvas");
@@ -53,6 +54,7 @@ let previewSteamId = "";
 let hasGeneratedUrl = false;
 let previewDebounceTimer: number | undefined;
 let previewRequestId = 0;
+let activePreviewRequestId: number | undefined;
 
 const EMPTY_WIDGET_DATA: WidgetData = {
   name: "Your name",
@@ -261,6 +263,16 @@ function isCurrentPreviewRequest(requestId: number, steamId: string): boolean {
   );
 }
 
+function setActivePreviewRequest(requestId?: number) {
+  activePreviewRequestId = requestId;
+  generateButton.disabled = requestId !== undefined;
+  if (requestId === undefined) {
+    preview.removeAttribute("aria-busy");
+  } else {
+    preview.setAttribute("aria-busy", "true");
+  }
+}
+
 async function loadPreview(reportErrors: boolean) {
   const config = readConfig();
   const configError = widgetConfigError(config);
@@ -276,7 +288,7 @@ async function loadPreview(reportErrors: boolean) {
   steamIdInput.setCustomValidity("");
 
   const requestId = ++previewRequestId;
-  preview.setAttribute("aria-busy", "true");
+  setActivePreviewRequest(requestId);
   try {
     const { profile, matches } = await fetchLeetifyData(
       config.steamId,
@@ -292,12 +304,13 @@ async function loadPreview(reportErrors: boolean) {
     renderWidgetState(preview, "error", message);
     updateCanvasRecommendation();
   } finally {
-    if (requestId === previewRequestId) preview.removeAttribute("aria-busy");
+    if (requestId === activePreviewRequestId) setActivePreviewRequest();
   }
 }
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (activePreviewRequestId !== undefined) return;
   const config = readConfig();
   const configError = widgetConfigError(config);
   if (configError) {
@@ -350,6 +363,7 @@ byId<HTMLButtonElement>("reset").addEventListener("click", () => {
   previewSteamId = "";
   hasGeneratedUrl = false;
   previewRequestId += 1;
+  setActivePreviewRequest();
   clearPreviewDebounce();
   updatePlatformRequirements();
   updateUrl();

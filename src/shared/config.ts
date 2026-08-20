@@ -3,6 +3,8 @@ import { DEFAULT_CONFIG, type WidgetConfig } from "./types";
 const STEAM64_PATTERN = /^\d{17}$/;
 const INVALID_STEAM_ID_MESSAGE = "Enter a valid 17-digit Steam64 ID.";
 const NO_PLATFORM_MESSAGE = "Enable Premier, Faceit, or both.";
+export const HISTORY_COUNT_OPTIONS = [4, 7, 8] as const;
+export const REFRESH_MINUTE_OPTIONS = [1, 2, 5, 10] as const;
 export const KEYLESS_MINIMUM_REFRESH_MINUTES = 5;
 
 function readBoolean(params: URLSearchParams, name: string, fallback: boolean) {
@@ -11,15 +13,14 @@ function readBoolean(params: URLSearchParams, name: string, fallback: boolean) {
   return value !== "0";
 }
 
-function readInteger(
+function readOption(
   params: URLSearchParams,
   name: string,
   fallback: number,
-  min: number,
-  max: number,
+  options: readonly number[],
 ) {
   const parsed = Number.parseInt(params.get(name) ?? "", 10);
-  return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : fallback;
+  return options.includes(parsed) ? parsed : fallback;
 }
 
 export function isValidSteam64Id(value: string): boolean {
@@ -39,19 +40,17 @@ export function paramsToConfig(params: URLSearchParams): WidgetConfig {
     showAdr: readBoolean(params, "adr", DEFAULT_CONFIG.showAdr),
     showAim: readBoolean(params, "aim", DEFAULT_CONFIG.showAim),
     showCompactHistory: params.get("compact") === "1",
-    historyCount: readInteger(
+    historyCount: readOption(
       params,
       "historyCount",
       DEFAULT_CONFIG.historyCount,
-      1,
-      8,
+      HISTORY_COUNT_OPTIONS,
     ),
-    refreshMinutes: readInteger(
+    refreshMinutes: readOption(
       params,
       "refresh",
       DEFAULT_CONFIG.refreshMinutes,
-      1,
-      60,
+      REFRESH_MINUTE_OPTIONS,
     ),
   };
 }
