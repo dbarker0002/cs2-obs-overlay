@@ -1,0 +1,19 @@
+{
+  "name": "cs2-stream-stats-overlay",
+  "version": "1.0.0",
+  "description": "Configurable CS2 Premier and Faceit stats overlay for OBS",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
+  }
+}

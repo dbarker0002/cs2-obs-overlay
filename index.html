@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Configure a CS2 Premier and Faceit stats overlay for OBS."
+    />
+    <title>CS2 Stream Stats Overlay</title>
+  </head>
+  <body>
+    <main id="app" class="page">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">OBS browser source</p>
+          <h1>CS2 Stats OBS Overlay</h1>
+          <p>Build an OBS overlay to display your Premier and Faceit stats. Powered by Leetify.</p>
+        </div>
+        <img
+          id="customizer-leetify-badge"
+          class="page-header__badge"
+          alt="Data provided by Leetify"
+        />
+      </header>
+
+      <div class="layout">
+        <form id="config-form" class="panel controls">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Configuration</p>
+              <h2>Player and display</h2>
+            </div>
+            <button id="reset" class="button button--ghost" type="button">Reset</button>
+          </div>
+
+          <label class="field">
+            <span>SteamID64</span>
+            <input
+              id="steam-id"
+              name="steamId"
+              inputmode="numeric"
+              pattern="\d{17}"
+              maxlength="17"
+              placeholder="Your 17-digit SteamID64"
+              required
+            />
+            <small>
+              Enter your Steam account ID. This can be found at
+              <a href="https://store.steampowered.com/account/" target="_blank" rel="noreferrer">
+                store.steampowered.com/account
+              </a>
+              listed under "{Your Username}'s Account" at the top.
+            </small>
+          </label>
+
+          <label class="field">
+            <span>Leetify API key <em>optional</em></span>
+            <input
+              id="api-key"
+              name="apiKey"
+              type="password"
+              autocomplete="off"
+              placeholder="Leetify API Key"
+            />
+            <small>
+              Obtain an API key at
+              <a href="https://leetify.com/app/developer" target="_blank" rel="noreferrer">
+                leetify.com/app/developer</a
+              >. A supplied key is embedded in the generated URL fragment and stored by
+              OBS. Do not share that URL.
+            </small>
+          </label>
+
+          <fieldset>
+            <legend>Platforms</legend>
+            <label class="check"><input id="show-premier" type="checkbox" checked /> Premier</label>
+            <label class="check"><input id="show-faceit" type="checkbox" checked /> Faceit</label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Statistics</legend>
+            <label class="check"><input id="show-kills" type="checkbox" checked /> Average kills</label>
+            <label class="check"><input id="show-adr" type="checkbox" checked /> ADR</label>
+            <label class="check"><input id="show-aim" type="checkbox" checked /> Leetify aim</label>
+            <label class="check"
+              ><input id="compact-history" type="checkbox" /> Compact match
+              history</label
+            >
+          </fieldset>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>History length</span>
+              <select id="history-count">
+                <option value="4">4 matches</option>
+                <option value="7">7 matches</option>
+                <option value="8" selected>8 matches</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Refresh interval</span>
+              <select id="refresh">
+                <option value="1">1 minute</option>
+                <option value="2">2 minutes</option>
+                <option value="5" selected>5 minutes</option>
+                <option value="10">10 minutes</option>
+              </select>
+              <small id="refresh-hint">5 minute minimum without API key.</small>
+            </label>
+          </div>
+
+          <button id="load-preview" class="button button--primary" type="submit">
+            Generate widget URL
+          </button>
+        </form>
+
+        <section class="panel output">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Live preview</p>
+              <h2>Your browser source</h2>
+            </div>
+          </div>
+
+          <div id="preview" class="preview" aria-live="polite">
+            <p>Preview loading…</p>
+          </div>
+
+          <label class="field url-field">
+            <span>Widget URL</span>
+            <div class="url-row">
+              <input id="widget-url" readonly />
+              <button id="copy-url" class="button button--primary" type="button">Copy</button>
+            </div>
+            <small>
+              Add this URL to an OBS Browser Source.
+              <span id="recommended-canvas"
+                >Recommended canvas: 520 × 190 based on current selected
+                options.</span
+              >
+            </small>
+          </label>
+
+          <div class="notice">
+            <strong>How updates work</strong>
+            <p>
+              OBS loads the hosted widget once, then the widget requests fresh data from
+              Leetify at your selected interval. No local app or hosted polling worker is
+              required.
+            </p>
+          </div>
+          <div class="notice">
+            <strong>Open source</strong>
+            <p>
+              The
+              <a
+                href="https://github.com/dbarker0002/cs2-obs-overlay"
+                target="_blank"
+                rel="noreferrer"
+                >source code is available on GitHub</a
+              >
+              if you prefer to review or run the overlay locally. This project was quickly 
+              vibe-coded in my spare time, so if you encounter any issues, please feel  free
+              to open an issue on GitHub.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="/src/customizer/customizer.ts"></script>
+  </body>
+</html>

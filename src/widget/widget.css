@@ -1,0 +1,11 @@
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+#app {
+  padding: 8px;
+}
